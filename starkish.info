@@ -1,0 +1,33 @@
+; $Id$
+
+name = Starkish
+description = Very basic framework theme for Drupal.
+screenshot = screenshot.png
+engine = phptemplate
+core = "6.x"
+
+regions[left] = Left Sidebar
+regions[right] = Right Sidebar
+regions[content_top] = Content Top
+regions[content_bottom] = Content Bottom
+regions[header] = Header
+regions[footer_block] = Footer
+
+features[] = logo
+features[] = name
+features[] = slogan
+features[] = mission
+features[] = node_user_picture
+features[] = comment_user_picture
+features[] = search
+features[] = favicon
+features[] = primary_links
+features[] = secondary_links
+
+stylesheets[all][] = css/default.css
+stylesheets[all][] = css/pretty.css
+stylesheets[print][] = css/print.css
+
+settings[starkish_block_editing]        = 1
+settings[starkish_rebuild_registry]     = 0
+settings[starkish_registry_reminder]    = 1
