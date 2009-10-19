@@ -1,10 +1,10 @@
 /* $Id$ */
 /************************************************
  * DO NOT DELETE THIS FILE
- * 
- * It contains tab styles, block edit link styles, 
- * and wireframe styles, all of which can be turned 
- * off in theme settings. 
+ *
+ * It contains tab styles, block edit link styles,
+ * and wireframe styles, all of which can be turned
+ * off in theme settings.
  ************************************************/
 
 div.view div.views-admin-links {
@@ -33,11 +33,6 @@ div.block:hover div.edit {
 /** Tabs CSS - Adds styles for the primary and secondary tabs. */
 div.tabs {
   margin: 0 0 5px 0;
-}
-
-ul.primary , ul.secondary{
-	display:table;
-	width:99%;
 }
 
 ul.primary {
@@ -147,3 +142,4 @@ ul.secondary a.active:hover {
   color: #000;
   background: url(../images/tabs/tab-secondary.png) repeat-x left top;
 }
+

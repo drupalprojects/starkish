@@ -27,18 +27,18 @@
  */
 ?>
 
-<div class="comment <?php echo $classes .' '. $zebra; if ($unpublished) { echo 'comment-unpublished'; } ?> clear-block">
-		
+<div class="comment <?php echo $classes . ' ' . $zebra; if ($unpublished) { echo 'comment-unpublished'; } ?> clear-block">
+
     <?php if ($title): ?>
       <h3><?php echo $title; if (!empty($new)): ?> <span class="new"><?php echo $new; ?></span><?php endif; ?></h3>
     <?php elseif (!empty($new)): ?>
       <?php echo $new; ?>
     <?php endif; ?>
-    
+
     <?php if ($unpublished): ?>
       <?php echo t('Unpublished'); ?>
     <?php endif; ?>
-    
+
     <?php if ($picture): ?>
 	    <?php echo $picture; ?>
 	  <?php endif; ?>
@@ -46,13 +46,13 @@
     <?php echo $submitted; ?>
 
     <?php echo $content ?>
-		
+
     <?php if ($signature): ?>
     	<?php echo $signature; ?>
     <?php endif; ?>
-    
+
     <?php if ($links): ?>
       <?php echo $links; ?>
-    <?php endif; ?>  
-		
+    <?php endif; ?>
+
 </div> <!-- /comment -->

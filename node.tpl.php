@@ -50,7 +50,7 @@
 ?>
 
 <div class="node <?php echo $classes; ?>" id="node-<?php echo $node->nid; ?>">
-   
+
   <?php if ($page == 0): ?>
     <h2><a href="<?php echo $node_url; ?>"><?php echo $title; ?></a></h2>
   <?php endif; ?>
@@ -58,20 +58,18 @@
   <?php if ($picture): ?>
     <?php echo $picture; ?>
   <?php endif; ?>
-	    
+
   <?php if ($submitted): ?>
     <?php echo $submitted; ?>
   <?php endif; ?>
-  
+
   <?php if ($terms): ?>
     <?php echo $terms; ?>
   <?php endif;?>
-	
-	<div class="content">
-	  <?php echo $content; ?>
-	</div>
-	
-  <?php if ($links): ?> 
+
+  <?php echo $content; ?>
+
+  <?php if ($links): ?>
     <?php echo $links; ?>
   <?php endif; ?>
 

@@ -8,10 +8,10 @@ function starkish_settings($saved_settings, $subtheme_defaults = array()) {
   // Merge the saved variables and their default values.
   $settings = array_merge($defaults, $saved_settings);
 
-  /*
-   * Create the form using Forms API
+  /**
+   * Create the form using Forms API.
    */
-	
+
   $form['starkish_wireframe'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Display borders around main layout elements'),
