@@ -1,5 +1,4 @@
 <?php
-// $Id$
     
 // Rebuild theme registry if setting is activated.
 if (theme_get_setting('starkish_rebuild_registry')) {
