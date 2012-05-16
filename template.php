@@ -1,292 +1,100 @@
 <?php
-    
-// Rebuild theme registry if setting is activated.
-if (theme_get_setting('starkish_rebuild_registry')) {
-  drupal_rebuild_theme_registry();
-	if (theme_get_setting('starkish_registry_reminder')) {
-		drupal_set_message(t('The theme registry has been rebuilt. <a href="!link">Turn off</a> this feature on production websites. (<a href="!link">Don\'t show this</a>.)', array('!link' => base_path() . 'admin/build/themes/settings/' . $GLOBALS['theme'])), 'warning');
-	}
-}
 
 /**
- * Create useful body classes that are page-specific.
- * Edit this theme to add custom body classes.
+ * Here we override the default HTML output of Drupal.
  */
-function starkish_preprocess_page(&$vars, $hook) {
-
-  // Don't display empty help from node_help().
-  if ($vars['help'] == "<div class=\"help\"><p></p>\n</div>") {
-    $vars['help'] = '';
-  }
-
-  // Classes for body element. Allows advanced theming based on context
-  $body_classes = array($vars['body_classes']);
-  if (user_access('administer blocks')) {
-	  $body_classes[] = 'admin';
-	}
-	if (theme_get_setting('starkish_wireframe')) {
-    $body_classes[] = 'with-wireframes'; // Optionally add the wireframes style.
-  }
-  if (!$vars['is_front']) {
-    // Add unique classes for each page and website section
-    $path = drupal_get_path_alias($_GET['q']);
-    list($section, ) = explode('/', $path, 2);
-    $body_classes[] = starkish_id_safe('page-'. $path);
-    $body_classes[] = starkish_id_safe('section-'. $section);
-
-    if (arg(0) == 'node') {
-      if (arg(1) == 'add') {
-        if ($section == 'node') {
-          array_pop($body_classes); // Remove 'section-node'
-        }
-        $body_classes[] = 'section-node-add'; // Add 'section-node-add'
-      }
-      elseif (is_numeric(arg(1)) && (arg(2) == 'edit' || arg(2) == 'delete')) {
-        if ($section == 'node') {
-          array_pop($body_classes); // Remove 'section-node'
-        }
-        $body_classes[] = 'section-node-'. arg(2); // Add 'section-node-edit' or 'section-node-delete'
-      }
-    }
-  }
-  $vars['body_classes'] = implode(' ', $body_classes); // Concatenate with spaces
+ 
+// Auto-rebuild the theme registry during theme development.
+if (theme_get_setting('clear_registry')) {
+  // Rebuild .info data.
+  system_rebuild_theme_data();
+  // Rebuild theme registry.
+  drupal_theme_rebuild();
 }
 
-/**
- * Override or insert variables into node classes for custom theming.
- * Modify this function to add your own custom classes.
- */
-function starkish_preprocess_node(&$vars, $hook) {
-  // Special classes for nodes
-  $classes = array('node');
-  if ($vars['sticky']) {
-    $classes[] = 'sticky';
+function starkish_preprocess_html(&$vars, $hook) {
+  // Adding classes wether #navigation is here or not
+  if (!empty($vars['main_menu']) or !empty($vars['sub_menu'])) {
+    $vars['classes_array'][] = 'with-nav';
   }
-  if (!$vars['status']) {
-    $classes[] = 'node-unpublished';
-    $vars['unpublished'] = TRUE;
+  if (!empty($vars['secondary_menu'])) {
+    $vars['classes_array'][] = 'with-subnav';
   }
-  else {
-    $vars['unpublished'] = FALSE;
-  }
-  if ($vars['uid'] && $vars['uid'] == $GLOBALS['user']->uid) {
-    $classes[] = 'node-mine'; // Node is authored by current user.
-  }
-  if ($vars['teaser']) {
-    $classes[] = 'node-teaser'; // Node is displayed as teaser.
-  }
-  // Class for node type: "node-type-page", "node-type-story", "node-type-my-custom-type", etc.
-  $classes[] = starkish_id_safe('node-type-' . $vars['type']);
-  $vars['classes'] = implode(' ', $classes); // Concatenate with spaces
 }
 
-/**
- * Override or insert variables into block classes for custom theming.
- * Also display edit block links if setting is enabled.
- * Modify this function to add your own custom classes.
- */
 function starkish_preprocess_block(&$vars, $hook) {
-    $block = $vars['block'];
+  // Add a striping class.
+  $vars['classes_array'][] = 'block-' . $vars['block_zebra'];
 
-    if (theme_get_setting('starkish_block_editing') && user_access('administer blocks')) {
-        // Display 'edit block' for custom blocks.
-        if ($block->module == 'block') {
-          $edit_links[] = l('<span>' . t('edit block') . '</span>', 'admin/build/block/configure/' . $block->module . '/' . $block->delta,
-            array(
-              'attributes' => array(
-                'title' => t('edit the content of this block'),
-                'class' => 'block-edit',
-              ),
-              'query' => drupal_get_destination(),
-              'html' => TRUE,
-            )
-          );
-        }
-        // Display 'configure' for other blocks.
-        else {
-          $edit_links[] = l('<span>' . t('configure') . '</span>', 'admin/build/block/configure/' . $block->module . '/' . $block->delta,
-            array(
-              'attributes' => array(
-                'title' => t('configure this block'),
-                'class' => 'block-config',
-              ),
-              'query' => drupal_get_destination(),
-              'html' => TRUE,
-            )
-          );
-        }
-
-        // Display 'edit view' for Views blocks.
-        if ($block->module == 'views' && user_access('administer views')) {
-          list($view_name, $view_block) = explode('-block', $block->delta);
-          $edit_links[] = l('<span>' . t('edit view') . '</span>', 'admin/build/views/edit/' . $view_name,
-            array(
-              'attributes' => array(
-                'title' => t('edit the view that defines this block'),
-                'class' => 'block-edit-view',
-              ),
-              'query' => drupal_get_destination(),
-              'fragment' => 'views-tab-block' . $view_block,
-              'html' => TRUE,
-            )
-          );
-        }
-        // Display 'edit menu' for Menu blocks.
-        elseif (($block->module == 'menu' || ($block->module == 'user' && $block->delta == 1)) && user_access('administer menu')) {
-          $menu_name = ($block->module == 'user') ? 'navigation' : $block->delta;
-          $edit_links[] = l('<span>' . t('edit menu') . '</span>', 'admin/build/menu-customize/' . $menu_name,
-            array(
-              'attributes' => array(
-                'title' => t('edit the menu that defines this block'),
-                'class' => 'block-edit-menu',
-              ),
-              'query' => drupal_get_destination(),
-              'html' => TRUE,
-            )
-          );
-        }
-        // Display 'edit menu' for Menu block blocks.
-        elseif ($block->module == 'menu_block' && user_access('administer menu')) {
-          list($menu_name, ) = split(':', variable_get("menu_block_{$block->delta}_parent", 'navigation:0'));
-          $edit_links[] = l('<span>' . t('edit menu') . '</span>', 'admin/build/menu-customize/' . $menu_name,
-            array(
-              'attributes' => array(
-                'title' => t('edit the menu that defines this block'),
-                'class' => 'block-edit-menu',
-              ),
-              'query' => drupal_get_destination(),
-              'html' => TRUE,
-            )
-          );
-        }
-
-        $vars['edit_links_array'] = $edit_links;
-        $vars['edit_links'] = '<div class="edit">' . implode(' ', $edit_links) . '</div>';
-      }
+  // Add first/last block classes
+  $first_last = "";
+  // If block id (count) is 1, it's first in region.
+  if ($vars['block_id'] == '1') {
+    $first_last = "first";
+    $vars['classes_array'][] = $first_last;
   }
-
-/**
- * Override or insert variables into comment classes for custom theming.
- * Modify this function to add your own custom classes.
- */
-function starkish_preprocess_comment(&$vars, $hook) {
-  // Add an "unpublished" flag.
-  $vars['unpublished'] = ($vars['comment']->status == COMMENT_NOT_PUBLISHED);
-
-  // If comment subjects are disabled, don't display them.
-  if (variable_get('comment_subject_field_' . $vars['node']->type, 1) == 0) {
-    $vars['title'] = '';
+  // Count amount of blocks about to be rendered in that region.
+  $block_count = count(block_list($vars['elements']['#block']->region));
+  if ($vars['block_id'] == $block_count) {
+    $first_last = "last";
+    $vars['classes_array'][] = $first_last;
   }
-
-  // Special classes for comments.
-  $classes = array('comment');
-  if ($vars['comment']->new) {
-    $classes[] = 'comment-new';
-  }
-  $classes[] = $vars['status'];
-  $classes[] = $vars['zebra'];
-  if ($vars['id'] == 1) {
-    $classes[] = 'first';
-  }
-  if ($vars['id'] == $vars['node']->comment_count) {
-    $classes[] = 'last';
-  }
-  if ($vars['comment']->uid == 0) {
-    // Comment is by an anonymous user.
-    $classes[] = 'comment-by-anon';
-  }
-  else {
-    if ($vars['comment']->uid == $vars['node']->uid) {
-      // Comment is by the node author.
-      $classes[] = 'comment-by-author';
-    }
-    if ($vars['comment']->uid == $GLOBALS['user']->uid) {
-      // Comment was posted by current user.
-      $classes[] = 'comment-mine';
-    }
-  }
-  $vars['classes'] = implode(' ', $classes);
 }
 
-/**
- * Customize the PRIMARY and SECONDARY LINKS, to allow the admin tabs to work on all browsers
- * An implementation of theme_menu_item_link()
- */
-function starkish_menu_item_link($link) {
-  if (empty($link['options'])) {
-    $link['options'] = array();
-  }
-
-  // If an item is a LOCAL TASK, render it as a tab
-  if ($link['type'] & MENU_IS_LOCAL_TASK) {
-    $link['title'] = '<span class="tab">'. check_plain($link['title']) .'</span>';
-    $link['options']['html'] = TRUE;
-  }
-  if (empty($link['type'])) {
-    $true = TRUE;
-  }
-  return l($link['title'], $link['href'], $link['options']);
+function starkish_preprocess_node(&$vars) {
+  // Placeholder. Add your node preprocessing code here.
 }
 
-function starkish_node_submitted($node) {
-  return t('Submitted by !username on @datetime',
-    array(
-      '!username' => theme('username', $node),
-      '@datetime' => format_date($node->created),
-    ));
-}
 
 /**
- * Duplicate of theme_menu_local_tasks() but adds clear-block to tabs.
- */
-function starkish_menu_local_tasks() {
-  $output = '';
-  if ($primary = menu_primary_local_tasks()) {
-    $output .= "<ul class=\"tabs primary clear-block\">\n". $primary ."</ul>\n";
-  }
-  if ($secondary = menu_secondary_local_tasks()) {
-    $output .= "<ul class=\"tabs secondary clear-block\">\n". $secondary ."</ul>\n";
-  }
-  return $output;
-}
-
-/**
- * Add custom classes to menu item.
- */
-function starkish_menu_item($link, $has_children, $menu = '', $in_active_trail = FALSE, $extra_class = NULL) {
-  $class = ($menu ? 'expanded' : ($has_children ? 'collapsed' : 'leaf'));
-  if (!empty($extra_class)) {
-    $class .= ' '. $extra_class;
-  }
-  if ($in_active_trail) {
-    $class .= ' active-trail';
-  }
-  $css_class = starkish_id_safe(str_replace(' ', '_', strip_tags($link)));
-  return '<li class="'. $class . ' ' . $css_class . '">' . $link . $menu ."</li>\n";
-}
-
-/**
- * Converts a string to a suitable html ID attribute, including:
- *  - Ensure an ID starts with an alpha character by optionally adding 'id_'.
- *	- Replaces any character except A-Z, numbers, and underscores with dashes.
- * 	- Converts entire string to lowercase.
- */
+ * Converts a string to a suitable html ID attribute.
+ *
+ * http://www.w3.org/TR/html4/struct/global.html#h-7.5.2 specifies what makes a
+ * valid ID attribute in HTML. This function:
+ *
+ * - Ensure an ID starts with an alpha character by optionally adding an 'n'.
+ * - Replaces any character except A-Z, numbers, and underscores with dashes.
+ * - Converts entire string to lowercase.
+ *
+ * @param $string
+ * 	The string
+ * @return
+ * 	The converted string
+ */	
 function starkish_id_safe($string) {
   // Replace with dashes anything that isn't A-Z, numbers, dashes, or underscores.
   $string = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '-', $string));
-  // If the first character is not a-z, add 'id_' in front.
+  // If the first character is not a-z, add 'n' in front.
   if (!ctype_lower($string{0})) { // Don't use ctype_alpha since its locale aware.
-    $string = 'id_'. $string;
+    $string = 'id'. $string;
   }
   return $string;
 }
 
 /**
- * Returns a themed breadcrumb trail.
- * Modify this to change the breacrumb separator, etc.
+ * Generate the HTML output for a menu link and submenu.
+ *
+ * @param $variables
+ *  An associative array containing:
+ *   - element: Structured array data for a menu link.
+ *
+ * @return
+ *  A themed HTML string.
+ *
+ * @ingroup themeable
+ * 
  */
-function starkish_breadcrumb($breadcrumb) {
-  if (!empty($breadcrumb)) {
-    return '<div class="breadcrumb">'. implode(' » ', $breadcrumb) .'</div>';
+function starkish_menu_link(array $variables) {
+  $element = $variables['element'];
+  $sub_menu = '';
+
+  if ($element['#below']) {
+    $sub_menu = drupal_render($element['#below']);
   }
+  $output = l($element['#title'], $element['#href'], $element['#localized_options']);
+  // Adding a class depending on the TITLE of the link (not constant)
+  $element['#attributes']['class'][] = starkish_id_safe($element['#title']);
+  // Adding a class depending on the ID of the link (constant)
+  $element['#attributes']['class'][] = 'mid-' . $element['#original_link']['mlid'];
+  return '<li' . drupal_attributes($element['#attributes']) . '>' . $output . $sub_menu . "</li>\n";
 }
