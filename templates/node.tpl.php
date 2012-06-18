@@ -18,11 +18,11 @@
   ?>
   
   <?php if (!empty($content['links']['terms'])): ?>
-    <?php print render($content['links']['terms']); ?></div>
+    <?php print render($content['links']['terms']); ?>
   <?php endif;?>
   
   <?php if (!empty($content['links'])): ?>
-    <?php print render($content['links']); ?></div>
+    <?php print render($content['links']); ?>
   <?php endif; ?>
       
 </div> <!-- /node-->
